@@ -25,9 +25,16 @@ class AudioPlayer {
     this.image = document.getElementById("image")
     this.title = document.getElementById("title")
     this.artist = document.getElementById("artist")
+    this.progressContainer = document.getElementById("progress-container")
+    this.progress = document.getElementById("progress")
+    this.currentTime = document.getElementById("current-time")
+    this.duration = document.getElementById("duration")
     this.isPlaying = false
+
     this.handlePlayClick = this.handlePlayClick.bind(this)
     this.handleSongChange = this.handleSongChange.bind(this)
+    this.handleAudioTimeUpdate = this.handleAudioTimeChange.bind(this)
+
     this.playSongBtn.addEventListener("click", this.handlePlayClick)
     this.nextSongBtn.addEventListener("click", () =>
       this.handleSongChange(this.songIndex + 1)
@@ -35,7 +42,33 @@ class AudioPlayer {
     this.prevSongBtn.addEventListener("click", () =>
       this.handleSongChange(this.songIndex - 1)
     )
+    this.audio.addEventListener("timeupdate", this.handleAudioTimeUpdate)
     this.loadSong(this.songs[this.songIndex])
+  }
+
+  handleAudioTimeChange(e) {
+    if (this.isPlaying) {
+      const { currentTime, duration } = e.srcElement
+
+      const displayProgress = (current, duration) => {
+        const percent = (current / duration) * 100
+        this.progress.style.width = `${percent}%`
+      }
+
+      const displayTime = (totalSeconds, timeElement) => {
+        const minutes = Math.floor(totalSeconds / 60)
+        const seconds = Math.floor(totalSeconds % 60)
+        if (typeof minutes === "number" && typeof seconds === "number") {
+          timeElement.textContent = `${minutes}:${
+            seconds < 10 ? "0" + seconds : seconds
+          }`
+        }
+      }
+
+      displayProgress(currentTime, duration)
+      displayTime(duration, this.duration)
+      displayTime(currentTime, this.currentTime)
+    }
   }
 
   handlePlayClick() {
@@ -73,3 +106,14 @@ class AudioPlayer {
 }
 
 const audioPlayer = new AudioPlayer()
+
+function handleProgressBarClick(e) {
+  const progress = e.offsetX / this.clientWidth
+  const audio = document.getElementById("audio")
+  audio.currentTime = progress * audio.duration
+  audio.play()
+}
+
+document
+  .getElementById("progress-container")
+  .addEventListener("click", handleProgressBarClick)
